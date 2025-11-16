@@ -3,635 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>For You</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background: #000;
-            color: #fff;
-            overflow-x: hidden;
-            cursor: default;
-        }
-
-        /* Smooth Scroll */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Cursor Trail */
-        .cursor-trail {
-            position: fixed;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 85, 157, 0.15) 0%, transparent 70%);
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: all 0.3s cubic-bezier(0.75, 0, 0.25, 1);
-            z-index: 9999;
-        }
-
-        /* Loading Screen */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            transition: opacity 1.5s, visibility 1.5s;
-        }
-
-        .loading-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .loading-text {
-            font-size: 1.2rem;
-            letter-spacing: 8px;
-            color: #FF559D;
-            margin-bottom: 40px;
-            animation: fadeInOut 2s infinite;
-        }
-
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-
-        .loading-bar {
-            width: 300px;
-            height: 2px;
-            background: #222;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .loading-progress {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, transparent, #FF559D, transparent);
-            animation: loading 2s ease-in-out forwards;
-        }
-
-        @keyframes loading {
-            to { width: 100%; }
-        }
-
-        /* Hero Section */
-        .hero {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% 50%, rgba(255, 85, 157, 0.05) 0%, transparent 50%);
-            animation: pulse 4s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-        }
-
-        .hero-title {
-            font-size: 5rem;
-            font-weight: 200;
-            letter-spacing: 20px;
-            margin-bottom: 30px;
-            opacity: 0;
-            animation: fadeInUp 1.5s 0.5s forwards;
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero-subtitle {
-            font-size: 1.5rem;
-            font-weight: 300;
-            letter-spacing: 8px;
-            color: #FF559D;
-            opacity: 0;
-            animation: fadeInUp 1.5s 1s forwards;
-            margin-bottom: 60px;
-        }
-
-        .scroll-indicator {
-            position: absolute;
-            bottom: 50px;
-            font-size: 0.9rem;
-            letter-spacing: 4px;
-            color: #888;
-            opacity: 0;
-            animation: fadeInUp 1.5s 1.5s forwards, bounce 2s 3s infinite;
-        }
-
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0); }
-            from { opacity: 0; transform: translateY(30px); }
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        /* Section Styling */
-        section {
-            min-height: 100vh;
-            padding: 100px 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        .section-number {
-            position: absolute;
-            top: 50px;
-            right: 50px;
-            font-size: 8rem;
-            font-weight: 100;
-            color: rgba(255, 255, 255, 0.03);
-            line-height: 1;
-        }
-
-        .content-wrapper {
-            max-width: 1200px;
-            width: 100%;
-        }
-
-        /* Photo Grid Section */
-        .photo-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 30px;
-            margin-top: 80px;
-        }
-
-        .photo-item {
-            position: relative;
-            aspect-ratio: 4/5;
-            overflow: hidden;
-            background: #111;
-            cursor: pointer;
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .photo-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, rgba(255, 85, 157, 0.1) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.6s;
-            z-index: 1;
-        }
-
-        .photo-item:hover::before {
-            opacity: 1;
-        }
-
-        .photo-item:hover {
-            transform: scale(1.02);
-            box-shadow: 0 20px 60px rgba(255, 85, 157, 0.2);
-        }
-
-        .photo-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 3rem;
-            color: #333;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-        }
-
-        .photo-label {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 30px;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
-            font-size: 1rem;
-            letter-spacing: 3px;
-            font-weight: 300;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s;
-            z-index: 2;
-        }
-
-        .photo-item:hover .photo-label {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Quote Section */
-        .quote-section {
-            background: linear-gradient(135deg, #0a0a0a 0%, #000 100%);
-        }
-
-        .quote-container {
-            text-align: center;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .quote-mark {
-            font-size: 6rem;
-            color: #FF559D;
-            line-height: 0.5;
-            margin-bottom: 40px;
-            opacity: 0.3;
-        }
-
-        .quote-text {
-            font-size: 2rem;
-            font-weight: 300;
-            line-height: 1.8;
-            letter-spacing: 2px;
-            margin-bottom: 50px;
-            color: #ccc;
-        }
-
-        .quote-author {
-            font-size: 1rem;
-            letter-spacing: 4px;
-            color: #FF559D;
-            font-weight: 300;
-        }
-
-        /* Moments Section */
-        .moments-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-            background: #FF559D;
-            margin-top: 80px;
-        }
-
-        .moment-card {
-            aspect-ratio: 1;
-            background: #000;
-            padding: 50px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .moment-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(255, 85, 157, 0.1) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.6s;
-        }
-
-        .moment-card:hover::before {
-            opacity: 1;
-        }
-
-        .moment-card:hover {
-            background: #0a0a0a;
-            transform: scale(1.05);
-            z-index: 10;
-        }
-
-        .moment-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            opacity: 0.8;
-        }
-
-        .moment-title {
-            font-size: 1.2rem;
-            letter-spacing: 3px;
-            font-weight: 300;
-            margin-bottom: 15px;
-        }
-
-        .moment-text {
-            font-size: 0.9rem;
-            color: #888;
-            letter-spacing: 2px;
-            line-height: 1.6;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s;
-        }
-
-        .moment-card:hover .moment-text {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Timeline Section */
-        .timeline {
-            position: relative;
-            max-width: 800px;
-            margin: 80px auto 0;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 100%;
-            background: linear-gradient(to bottom, transparent, #FF559D, transparent);
-        }
-
-        .timeline-item {
-            margin-bottom: 100px;
-            position: relative;
-            opacity: 0;
-            animation: fadeIn 1s forwards;
-        }
-
-        .timeline-item:nth-child(1) { animation-delay: 0.2s; }
-        .timeline-item:nth-child(2) { animation-delay: 0.4s; }
-        .timeline-item:nth-child(3) { animation-delay: 0.6s; }
-
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-
-        .timeline-content {
-            width: 45%;
-            padding: 30px;
-            background: rgba(255, 85, 157, 0.05);
-            border: 1px solid rgba(255, 85, 157, 0.2);
-            position: relative;
-        }
-
-        .timeline-item:nth-child(odd) .timeline-content {
-            margin-left: auto;
-        }
-
-        .timeline-date {
-            font-size: 0.9rem;
-            letter-spacing: 3px;
-            color: #FF559D;
-            margin-bottom: 15px;
-        }
-
-        .timeline-title {
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            font-weight: 300;
-        }
-
-        .timeline-description {
-            font-size: 0.95rem;
-            color: #aaa;
-            line-height: 1.8;
-            letter-spacing: 1px;
-        }
-
-        .timeline-dot {
-            position: absolute;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 12px;
-            height: 12px;
-            background: #FF559D;
-            border-radius: 50%;
-            box-shadow: 0 0 0 4px #000, 0 0 0 8px rgba(255, 85, 157, 0.3);
-        }
-
-        /* Proposal Section */
-        .proposal-section {
-            background: #000;
-            text-align: center;
-            flex-direction: column;
-        }
-
-        .proposal-title {
-            font-size: 4rem;
-            font-weight: 200;
-            letter-spacing: 15px;
-            margin-bottom: 60px;
-            background: linear-gradient(90deg, #fff, #FF559D, #fff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: shimmer 3s infinite;
-            background-size: 200% auto;
-        }
-
-        @keyframes shimmer {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .proposal-message {
-            font-size: 1.5rem;
-            font-weight: 300;
-            line-height: 2.5;
-            letter-spacing: 3px;
-            color: #ccc;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        /* Modal */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.6s;
-            z-index: 20000;
-        }
-
-        .modal.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-content {
-            text-align: center;
-            max-width: 700px;
-            padding: 80px;
-            background: linear-gradient(135deg, #0a0a0a, #000);
-            border: 1px solid #FF559D;
-            position: relative;
-            transform: scale(0.8);
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .modal.active .modal-content {
-            transform: scale(1);
-        }
-
-        .modal-title {
-            font-size: 3rem;
-            font-weight: 200;
-            letter-spacing: 10px;
-            margin-bottom: 40px;
-            color: #FF559D;
-        }
-
-        .modal-text {
-            font-size: 1.3rem;
-            line-height: 2;
-            letter-spacing: 2px;
-            color: #ccc;
-            font-weight: 300;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 30px;
-            right: 40px;
-            font-size: 2rem;
-            color: #666;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .close-btn:hover {
-            color: #FF559D;
-            transform: rotate(90deg);
-        }
-
-        /* Particles */
-        .particle {
-            position: fixed;
-            width: 2px;
-            height: 2px;
-            background: #FF559D;
-            pointer-events: none;
-            opacity: 0;
-            z-index: 19999;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
-                letter-spacing: 10px;
-            }
-
-            .hero-subtitle {
-                font-size: 1rem;
-                letter-spacing: 4px;
-            }
-
-            section {
-                padding: 80px 20px;
-            }
-
-            .section-number {
-                font-size: 4rem;
-                right: 20px;
-            }
-
-            .photo-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .quote-text {
-                font-size: 1.3rem;
-            }
-
-            .moments-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .timeline::before {
-                left: 30px;
-            }
-
-            .timeline-content {
-                width: calc(100% - 80px);
-                margin-left: 80px !important;
-            }
-
-            .timeline-dot {
-                left: 30px;
-            }
-
-            .proposal-title {
-                font-size: 2rem;
-                letter-spacing: 8px;
-            }
-
-            .proposal-message {
-                font-size: 1.1rem;
-            }
-
-            .modal-content {
-                padding: 50px 30px;
-                margin: 20px;
-            }
-
-            .modal-title {
-                font-size: 2rem;
-            }
-
-            .modal-text {
-                font-size: 1.1rem;
-            }
-        }
-    </style>
+    <title>For My Jeev ❤️</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Cursor Trail -->
@@ -639,7 +12,7 @@
 
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
-        <div class="loading-text">LOADING</div>
+        <div class="loading-text">PREPARING SOMETHING SPECIAL FOR YOU</div>
         <div class="loading-bar">
             <div class="loading-progress"></div>
         </div>
@@ -647,104 +20,120 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1 class="hero-title">Dear Jeev</h1>
+        <h1 class="hero-title">DEAR JEEV</h1>
         <p class="hero-subtitle">MY BEAUTIFUL PRINCESS</p>
-        <div class="scroll-indicator">SCROLL TO EXPLORE</div>
+        <div class="hero-description">This is my heart speaking to yours</div>
+        <div class="scroll-indicator">SCROLL TO EXPLORE OUR STORY</div>
     </section>
 
- <!-- Photo Gallery Section -->
-<section>
-    <div class="section-number">01</div>
-    <div class="content-wrapper">
-        <div class="photo-grid">
-            <!-- Photo 1: Interview/First Meeting -->
-            <div class="photo-item" onclick="showModal('THE INTERVIEW - 2023', 'I walked in for an interview, but walked out with something far more precious - the first glimpse of you. Little did I know, that day would change my life forever.')">
-                <img src="JEEVV.JPG" alt="Where it all began" style="width: 100%; height: 100%; object-fit: cover;">
-                <div class="photo-label">MY PRINCESS</div>
+    <!-- Opening Letter Section -->
+    <section class="letter-section">
+        <div class="section-number">01</div>
+        <div class="content-wrapper">
+            <div class="letter-container">
+                <div class="letter-header">A Letter From My Heart</div>
+                <div class="letter-content">
+                    <p>My Dearest Jeev,</p>
+                    <p>I came for an interview in 2023, but I found you. That day, I prayed to God - please let me get this job, not for the work, but because I wanted to see you daily. And God listened.</p>
+                    <p>I had big dreams and goals. I was focused on my career. But then you came into my life, and suddenly nothing mattered without you. I realized that real success means having you by my side.</p>
+                    <p>I never gave this much attention to anyone before. But with you, even this feels small. You deserve so much more, but I promise to give you everything I have.</p>
+                    <p class="letter-signature">Forever yours,<br>Your Love</p>
+                </div>
             </div>
-            
-            <!-- Photo 2: Dandeli Trip -->
-            <div class="photo-item" onclick="showModal('DANDELI - 2025', 'Among the forests and rivers of Dandeli, we found something beautiful - each other. Every moment, every adventure brought us closer, and I knew then that you were my forever.')">
-                <img src="JEEV 2.JPG" alt="Dandeli memories" style="width: 100%; height: 100%; object-fit: cover;">
-                <div class="photo-label">YOUR SMILE</div>
-            </div>
-            
-            <!-- Photo 3: Together Moments -->
-            <div class="photo-item" onclick="showModal('EVERY MOMENT TOGETHER', 'From chai conversations to sunset walks, every single moment with you feels like magic. You make the ordinary extraordinary.')">
-                <img src="insta.PNG" alt="Our moments" style="width: 100%; height: 100%; object-fit: cover;">
-                <div class="photo-label">OUR MOMENTS</div>
-            </div>
-            
-            <!-- Photo 4: Future/Forever -->
-            <div class="photo-item" onclick="showModal('FOREVER WITH YOU', 'I want to create a lifetime of memories with you. Every sunrise, every festival, every adventure - I want it all with you.')">
-                <img src="IMG_4705.JPG" alt="Forever" style="width: 100%; height: 100%; object-fit: cover;">
-                <div class="photo-label">FOREVER</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-
-    <!-- Quote Section -->
-    <section class="quote-section">
-        <div class="section-number">02</div>
-        <div class="quote-container">
-            <div class="quote-mark">"</div>
-            <p class="quote-text">I didn't fall for you. I walked into love with you, with my eyes wide open, choosing to take every step down that path</p>
-            <p class="quote-author">OUR LOVE</p>
         </div>
     </section>
 
-    <!-- Moments Section -->
+    <!-- Photo Gallery Section -->
     <section>
+        <div class="section-number">02</div>
+        <div class="content-wrapper">
+            <h2 class="section-title">OUR PRECIOUS MOMENTS</h2>
+            <div class="photo-grid">
+                <div class="photo-item" onclick="showModal('MY PRINCESS', 'You are the most beautiful person I have ever seen. Not just outside, but your heart, your soul, everything about you.')">
+                    <img src="JEEVV.JPG" alt="My Princess">
+                    <div class="photo-label">MY PRINCESS</div>
+                </div>
+                
+                <div class="photo-item" onclick="showModal('YOUR SMILE', 'Your smile is like sunshine on a cloudy day. When you smile, my whole world lights up. I live to see that smile daily.')">
+                    <img src="JEEV 2.JPG" alt="Your Smile">
+                    <div class="photo-label">YOUR SMILE</div>
+                </div>
+                
+                <div class="photo-item" onclick="showModal('TOGETHER', 'Each moment with you is a treasure I hold close to my heart. Everything becomes magical when you are by my side.')">
+                    <img src="insta.PNG" alt="Together">
+                    <div class="photo-label">TOGETHER</div>
+                </div>
+                
+                <div class="photo-item" onclick="showModal('FOREVER', 'I want to spend the rest of my life with you. Wake up next to you, share festivals with you, travel the world with you.')">
+                    <img src="IMG_4705.JPG" alt="Forever">
+                    <div class="photo-label">FOREVER</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Daily Thoughts Section - COMPLETELY REWRITTEN -->
+    <section class="daily-thoughts-section">
         <div class="section-number">03</div>
         <div class="content-wrapper">
-            <div class="moments-grid">
-                <div class="moment-card" onclick="showModal('YOUR SMILE', 'Your smile lights up my world in ways sunshine never could. It is my favorite sight in the entire universe.')">
-                    <div class="moment-icon">✧</div>
-                    <div class="moment-title">YOUR SMILE</div>
-                    <p class="moment-text">My favorite view in the world</p>
+            <h2 class="section-title">YOU IN MY LIFE</h2>
+            <div class="thoughts-grid">
+                <div class="thought-card">
+                    <div class="thought-icon">🌅</div>
+                    <div class="thought-title">My Mornings</div>
+                    <p class="thought-text">Before I even open my eyes fully, you're already on my mind. That's how my day begins - thinking of you and smiling.</p>
                 </div>
-                <div class="moment-card" onclick="showModal('YOUR LAUGHTER', 'The sound of your laughter is my favorite melody. It brings joy to my heart like nothing else.')">
-                    <div class="moment-icon">◈</div>
-                    <div class="moment-title">YOUR LAUGHTER</div>
-                    <p class="moment-text">Music to my soul</p>
+                <div class="thought-card">
+                    <div class="thought-icon">🌙</div>
+                    <div class="thought-title">My Nights</div>
+                    <p class="thought-text">When I close my eyes to sleep, I see you in my dreams. We're always together, always happy, always laughing.</p>
                 </div>
-                <div class="moment-card" onclick="showModal('YOUR PRESENCE', 'Just being near you brings me peace. Your presence is my comfort zone, my safe place.')">
-                    <div class="moment-icon">❖</div>
-                    <div class="moment-title">YOUR PRESENCE</div>
-                    <p class="moment-text">My peace and comfort</p>
+                <div class="thought-card">
+                    <div class="thought-icon">🌕</div>
+                    <div class="thought-title">Looking At The Moon</div>
+                    <p class="thought-text">Whenever I look up at the moon, I see your smile there - bright, beautiful, and making my heart beat faster.</p>
                 </div>
-                <div class="moment-card" onclick="showModal('OUR ADVENTURES', 'From Dandeli rapids to quiet coffee dates, every adventure with you is my favorite story.')">
-                    <div class="moment-icon">✦</div>
-                    <div class="moment-title">ADVENTURES</div>
-                    <p class="moment-text">Every journey with you</p>
+                <div class="thought-card">
+                    <div class="thought-icon">☀️</div>
+                    <div class="thought-title">Starting Each Day</div>
+                    <p class="thought-text">Thinking of you gives me energy to face anything. You're my motivation to be better, to do better.</p>
                 </div>
-                <div class="moment-card" onclick="showModal('OUR BOND', 'What we have is rare and precious. A connection that grows stronger with every passing day.')">
-                    <div class="moment-icon">◆</div>
-                    <div class="moment-title">OUR BOND</div>
-                    <p class="moment-text">Stronger every day</p>
+                <div class="thought-card">
+                    <div class="thought-icon">⭐</div>
+                    <div class="thought-title">Ending Each Day</div>
+                    <p class="thought-text">No matter how hard the day was, your thought brings me peace. Everything feels right again.</p>
                 </div>
-                <div class="moment-card" onclick="showModal('OUR FUTURE', 'I dream of a future filled with you - festivals, travels, quiet mornings, and endless love.')">
-                    <div class="moment-icon">✵</div>
-                    <div class="moment-title">OUR FUTURE</div>
-                    <p class="moment-text">Together forever</p>
+                <div class="thought-card">
+                    <div class="thought-icon">💭</div>
+                    <div class="thought-title">Throughout The Day</div>
+                    <p class="thought-text">Between work, between tasks, my mind always wanders back to you. You're always there in my thoughts.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Timeline Section -->
-    <section>
+    <!-- Deep Love Quote Section -->
+    <section class="quote-section">
         <div class="section-number">04</div>
+        <div class="quote-container">
+            <div class="quote-mark">"</div>
+            <p class="quote-text">My love for you has no limits, no boundaries, no end. It's bigger than anything I can explain. It's deeper than any ocean, higher than any mountain, and endless like the sky above us.</p>
+            <p class="quote-author">FROM THE DEPTHS OF MY HEART</p>
+        </div>
+    </section>
+
+    <!-- Our Journey Timeline -->
+    <section>
+        <div class="section-number">05</div>
         <div class="content-wrapper">
+            <h2 class="section-title">OUR BEAUTIFUL JOURNEY</h2>
             <div class="timeline">
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
                         <div class="timeline-date">2023</div>
-                        <div class="timeline-title">The Interview</div>
-                        <p class="timeline-description">I came for an interview, but found something far more valuable. The moment I saw you, I knew you were special. That first glimpse of you changed everything.</p>
+                        <div class="timeline-title">The Interview Day</div>
+                        <p class="timeline-description">I came for an interview that day. But when I saw you, I knew my life would change. I requested God - please give me this job, because I wanted to see you daily. That prayer was answered.</p>
                     </div>
                 </div>
                 <div class="timeline-item">
@@ -752,33 +141,142 @@
                     <div class="timeline-content">
                         <div class="timeline-date">2025</div>
                         <div class="timeline-title">Dandeli Trip</div>
-                        <p class="timeline-description">Among the lush forests and flowing rivers of Dandeli, we discovered something beautiful - our connection. Every shared adventure, every laugh, every moment brought us closer together.</p>
+                        <p class="timeline-description">Dandeli was where we became close. The forests, the rivers, the laughter - each moment made me fall deeper in love with you. That trip showed me you're the one I want for life.</p>
                     </div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
                         <div class="timeline-date">NOW & FOREVER</div>
-                        <div class="timeline-title">My Heart's Truth</div>
-                        <p class="timeline-description">Today, I want you to know how deeply I love you and how much you mean to me. You are my everything.</p>
+                        <div class="timeline-title">You Became My Priority</div>
+                        <p class="timeline-description">I had big dreams. I was focused on career and success. But then you came along, and suddenly nothing mattered without you. I realized real success means having you beside me. So I chose you. I chose us. Because building our future together is more important than anything else.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Proposal Section -->
+    <!-- Why You're Special -->
+    <section>
+        <div class="section-number">06</div>
+        <div class="content-wrapper">
+            <h2 class="section-title">WHAT MAKES YOU SPECIAL</h2>
+            <div class="love-reasons-grid">
+                <div class="love-reason-card">
+                    <div class="reason-icon">💖</div>
+                    <div class="reason-title">You're Different</div>
+                    <p class="reason-text">I never felt this way about anyone before. With you, everything is different, everything is special.</p>
+                </div>
+                <div class="love-reason-card">
+                    <div class="reason-icon">🌟</div>
+                    <div class="reason-title">Your Nature</div>
+                    <p class="reason-text">The way you talk, laugh, and care for others - everything makes me love you more daily.</p>
+                </div>
+                <div class="love-reason-card">
+                    <div class="reason-icon">✨</div>
+                    <div class="reason-title">You Understand Me</div>
+                    <p class="reason-text">You know when I'm happy or sad, even when I try to hide it. That connection is rare and precious.</p>
+                </div>
+                <div class="love-reason-card">
+                    <div class="reason-icon">💝</div>
+                    <div class="reason-title">Your Dreams</div>
+                    <p class="reason-text">I want to support your dreams, help you achieve everything, and be there cheering at every step.</p>
+                </div>
+                <div class="love-reason-card">
+                    <div class="reason-icon">🌹</div>
+                    <div class="reason-title">Your Strength</div>
+                    <p class="reason-text">The way you handle challenges with grace inspires me. You're stronger than you know.</p>
+                </div>
+                <div class="love-reason-card">
+                    <div class="reason-icon">💫</div>
+                    <div class="reason-title">Just Being You</div>
+                    <p class="reason-text">You don't need to do anything special. Just being yourself makes me fall in love again and again.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rotating Quotes Carousel - INCREASED TIME & ADDED NEW QUOTE -->
+    <section class="quotes-carousel-section">
+        <div class="section-number">07</div>
+        <div class="content-wrapper">
+            <h2 class="section-title">MORE FROM MY HEART</h2>
+            <div class="quotes-carousel" id="quotesCarousel">
+                <div class="carousel-quote active">
+                    <p>"You're not just my girlfriend. You're my best friend, my strength, my peace - you're my everything."</p>
+                </div>
+                <div class="carousel-quote">
+                    <p>"I want to complete the rest of my journey with you. Build a successful life together, with our parents happy and proud beside us."</p>
+                </div>
+                <div class="carousel-quote">
+                    <p>"Every love song reminds me of you. Every romantic movie makes me think of us."</p>
+                </div>
+                <div class="carousel-quote">
+                    <p>"I don't need a perfect life. I just need you in it, and everything becomes perfect."</p>
+                </div>
+                <div class="carousel-quote">
+                    <p>"People search their whole life for their soulmate. I found mine when I wasn't even looking."</p>
+                </div>
+                <div class="carousel-quote">
+                    <p>"My biggest achievement isn't my degree or job. It's winning your heart and making you smile."</p>
+                </div>
+            </div>
+            <div class="carousel-dots" id="carouselDots"></div>
+        </div>
+    </section>
+
+    <!-- Final Declaration -->
     <section class="proposal-section">
-        <div class="section-number">05</div>
-        <h2 class="proposal-title">FROM MY HEART</h2>
-        <p class="proposal-message">
-            I love you so much, more than words can express.<br>
-            You are my dream, my reality, my everything.<br>
-            I want to share the rest of my life with you,<br>
-            Creating beautiful memories, celebrating every moment,<br>
-            And loving you more with each passing day.<br><br>
-            You are my forever, and I am completely yours.
-        </p>
+        <div class="section-number">08</div>
+        <h2 class="proposal-title">MY PROMISE TO YOU</h2>
+        <div class="proposal-message">
+            <p class="message-highlight">Jeev, My Beautiful Princess,</p>
+            
+            <p>I love you so much that words feel too small to express it.</p>
+            
+            <p>Each morning when I wake up, you're my first thought.<br>
+            Each night when I sleep, you're in my dreams.<br>
+            When I look at the moon, I see your beautiful smile there.</p>
+            
+            <p>I came for an interview that day, but I found my life's purpose - YOU.<br>
+            Since then, coming to office means coming to see you.<br>
+            Daily, I thank God for bringing you into my life.</p>
+            
+            <p>I want to walk through life holding your hand.<br>
+            Support your dreams and celebrate your success.<br>
+            Make you smile daily.<br>
+            Be your strength whenever you need it.</p>
+            
+            <p class="message-final">You're my today, my tomorrow, my forever.<br>
+            I love you more than anything in this world. ❤️</p>
+            
+            <div class="heart-animation">❤️</div>
+        </div>
+    </section>
+
+    <!-- Hidden Surprise -->
+    <section class="surprise-section" id="surpriseSection">
+        <div class="content-wrapper">
+            <div class="surprise-content">
+                <h2 class="surprise-title">One Last Thing...</h2>
+                <p class="surprise-text">
+                    I know I'm not perfect.<br>
+                    I make mistakes, I have flaws, I have shortcomings.<br>
+                    But my love for you is perfect.<br><br>
+                    
+                    I promise:<br>
+                    I'll never let you feel alone.<br>
+                    I'll never let you cry without being there.<br>
+                    I'll always stand beside you, no matter what.<br><br>
+                    
+                    You've given meaning to my life.<br>
+                    You've made me believe in love and forever.<br><br>
+                    
+                    <span class="surprise-highlight">Thank you for being you.<br>
+                    I love you, Jeev. Forever and always. ❤️</span>
+                </p>
+            </div>
+        </div>
     </section>
 
     <!-- Modal -->
@@ -790,103 +288,6 @@
         </div>
     </div>
 
-    <script>
-        // Cursor trail effect
-        const cursorTrail = document.getElementById('cursorTrail');
-        let mouseX = 0, mouseY = 0;
-        let trailX = 0, trailY = 0;
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        function animateTrail() {
-            trailX += (mouseX - trailX) * 0.1;
-            trailY += (mouseY - trailY) * 0.1;
-            cursorTrail.style.left = trailX + 'px';
-            cursorTrail.style.top = trailY + 'px';
-            requestAnimationFrame(animateTrail);
-        }
-        animateTrail();
-
-        // Loading screen
-        setTimeout(() => {
-            document.getElementById('loadingScreen').classList.add('hidden');
-        }, 2000);
-
-        // Modal functions
-        function showModal(title, text) {
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalText').textContent = text;
-            document.getElementById('modal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-            createParticles();
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        // Particle effects
-        function createParticles() {
-            for (let i = 0; i < 30; i++) {
-                setTimeout(() => {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    particle.style.left = Math.random() * 100 + '%';
-                    particle.style.top = Math.random() * 100 + '%';
-                    document.body.appendChild(particle);
-
-                    setTimeout(() => {
-                        particle.style.opacity = '1';
-                        particle.style.transform = `translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px) scale(${Math.random() * 3 + 1})`;
-                        particle.style.transition = 'all 2s';
-                    }, 10);
-
-                    setTimeout(() => {
-                        particle.remove();
-                    }, 2000);
-                }, i * 50);
-            }
-        }
-
-        // Smooth reveal on scroll
-        const observerOptions = {
-            threshold: 0.2,
-            rootMargin: '0px 0px -100px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('section').forEach(section => {
-            section.style.opacity = '0';
-            section.style.transform = 'translateY(50px)';
-            section.style.transition = 'opacity 1s, transform 1s';
-            observer.observe(section);
-        });
-
-        // Close modal on escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-            }
-        });
-
-        // Close modal on background click
-        document.getElementById('modal').addEventListener('click', (e) => {
-            if (e.target.id === 'modal') {
-                closeModal();
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
